@@ -1,4 +1,5 @@
 🧾 B2B Caso Tecnico
+
 By: Jandry Romero
 
 Este repositorio implementa una solución backend basada en microservicios, totalmente dockerizada, para la gestión de clientes, productos y órdenes, incluyendo:
@@ -19,31 +20,27 @@ Opción de orquestación con un Lambda local (serverless-offline)
 
 📚 Índice
 
-Arquitectura
+1. Arquitectura
 
-Tecnologías usadas
+2. Tecnologías usadas
 
-Requisitos previos
+3. Requisitos previos
 
-Estructura del proyecto
+4. Estructura del proyecto
 
-Cómo levantar todo con Docker
+5. Cómo levantar todo con Docker
 
-Migraciones
+6. Migraciones
 
-Variables de entorno
+7. Variables de entorno
 
-APIs
+8. APIs
 
-Probar el flujo completo
+9. Probar el flujo completo
 
-Idempotencia
+10. Idempotencia
 
-Orchestrator Lambda (opcional)
-
-Diagrama de arquitectura
-
-Mejoras propuestas
+11. Orchestrator Lambda (opcional)
 
 🏛️ Arquitectura
 
@@ -51,9 +48,9 @@ La arquitectura incluye:
 
 MySQL (Docker) → Base de datos principal
 
-customers-api → Manejo de clientes + login + endpoint interno /internal/customers/:id
+customers-api (Docker) → Manejo de clientes + login + endpoint interno /internal/customers/:id
 
-orders-api → Manejo de productos, creación de órdenes, confirmación idempotente
+orders-api (Docker) → Manejo de productos, creación de órdenes, confirmación idempotente
 
 Comunicación interna:
 
@@ -64,28 +61,34 @@ ambos → MySQL (tabla compartida)
 Opcional: Lambda Orchestrator (serverless offline) para procesar flujo completo
 
 🧰 Tecnologías usadas
-Componente	Tecnología
-Lenguaje	Node.js 20
-Base de datos	MySQL 8
-Contenedores	Docker + docker-compose
-API	Express.js
-Seguridad	JWT + SERVICE_TOKEN
-Migraciones	Scripts JS
-Orquestación	AWS Lambda (emulado con serverless-offline)
+
+- Componente	Tecnología
+- Lenguaje	Node.js 20
+- Base de datos	MySQL 8
+- Contenedores	Docker + docker-compose
+- API	Express.js
+- Seguridad	JWT + SERVICE_TOKEN
+- Migraciones	Scripts JS
+- Orquestación	AWS Lambda (emulado con serverless-offline)
+
 📦 Estructura del proyecto
-prueba-backend-b2b/
-  customers-api/
-    src/
-    Dockerfile
-    .env.example
-  orders-api/
-    src/
-    Dockerfile
-    .env.example
-  db/
-    schema.sql
-  docker-compose.yml
-  lambda-orchestrator/ (opcional)
+
+## 📦 Estructura del proyecto
+
+- prueba-backend-b2b/
+  - customers-api/
+    - src/
+    - Dockerfile
+    - .env.example
+  - orders-api/
+    - src/
+    - Dockerfile
+    - .env.example
+  - db/
+    - schema.sql
+  - docker-compose.yml
+  - lambda-orchestrator/ (opcional)
+
 
 🐳 Cómo levantar todo con Docker
 
@@ -111,6 +114,7 @@ docker compose ps
 Luego de levantar los contenedores, ejecuta:
 
 docker compose exec customers-api npm run migrate
+
 docker compose exec orders-api npm run migrate
 
 
@@ -119,60 +123,81 @@ Para verificar tablas:
 docker compose exec mysql mysql -u b2b_user -pb2b_pass -e "USE b2b_db; SHOW TABLES;"
 
 🔐 Variables de entorno
-customers-api (.env)
-PORT=3001
-DB_HOST=mysql
-DB_PORT=3306
-DB_USER=b2b_user
-DB_PASSWORD=b2b_pass
-DB_NAME=b2b_db
 
-JWT_SECRET=super-secret-key
-SERVICE_TOKEN=internal-service-token
-ADMIN_USER=admin
-ADMIN_PASSWORD=admin123
+customers-api (.env)
+- PORT=3001
+- DB_HOST=mysql
+- DB_PORT=3306
+- DB_USER=b2b_user
+- DB_PASSWORD=b2b_pass
+- DB_NAME=b2b_db
+
+- JWT_SECRET=super-secret-key
+- SERVICE_TOKEN=internal-service-token
+- ADMIN_USER=admin
+- ADMIN_PASSWORD=admin123
 
 orders-api (.env)
-PORT=3002
-DB_HOST=mysql
-DB_PORT=3306
-DB_USER=b2b_user
-DB_PASSWORD=b2b_pass
-DB_NAME=b2b_db
+- PORT=3002
+- DB_HOST=mysql
+- DB_PORT=3306
+- DB_USER=b2b_user
+- DB_PASSWORD=b2b_pass
+- DB_NAME=b2b_db
 
-JWT_SECRET=super-secret-key
-SERVICE_TOKEN=internal-service-token
-CUSTOMERS_API_BASE=http://customers-api:3001
+- JWT_SECRET=super-secret-key
+- SERVICE_TOKEN=internal-service-token
+- CUSTOMERS_API_BASE=http://customers-api:3001
 
 🚀 APIs
+
 customers-api
+
 Método	Ruta	Descripción
+
 POST	/auth/login	Login (JWT)
+
 GET	/customers	Lista clientes
+
 POST	/customers	Crear cliente
+
 GET	/customers/:id	Obtener cliente
+
 PUT	/customers/:id	Actualizar cliente
+
 DELETE	/customers/:id	Eliminar cliente
+
 GET	/internal/customers/:id	Endpoint interno protegido
+
 orders-api
+
 Método	Ruta	Descripción
+
 POST	/products	Crear producto
+
 GET	/products	Listar productos
+
 POST	/orders	Crear orden (valida stock, transacción)
+
 POST	/orders/:id/confirm	Confirmar orden (idempotente)
+
 🧪 Probar el flujo completo
+
 1️⃣ Obtener JWT
+
 curl -X POST http://localhost:3001/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "admin123"}'
 
 2️⃣ Crear producto
+
 curl -X POST http://localhost:3002/products \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"sku":"SKU1","name":"Product","price_cents":1500,"stock":10}'
 
 3️⃣ Crear orden
+
 curl -X POST http://localhost:3002/orders \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
@@ -184,6 +209,7 @@ curl -X POST http://localhost:3002/orders \
   }'
 
 4️⃣ Confirmar orden (idempotente)
+
 curl -X POST http://localhost:3002/orders/1/confirm \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Idempotency-Key: test-123" \
@@ -233,22 +259,6 @@ Luego puede exponerse públicamente con ngrok:
 
 ngrok http 3003
 
-🧩 Diagrama de Arquitectura
-🚀 Mejoras propuestas
-
-Cachear validaciones de clientes
-
-Circuit breaker entre microservicios
-
-Logs distribuidos + OpenTelemetry
-
-Dockerizar Lambda Orchestrator
-
-Implementar API Gateway delante de todos los servicios
-
-Agregar pruebas unitarias e integración
-
-Deploy real con ECS/Fargate o Kubernetes
 
 🎉 Conclusión
 
