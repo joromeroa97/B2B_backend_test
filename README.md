@@ -122,10 +122,19 @@ docker compose exec orders-api npm run migrate
 Para verificar tablas:
 ```
 docker compose exec mysql 
-mysql -u b2b_user -pb2b_pass -e 
-"USE b2b_db; 
-SHOW TABLES;"
+mysql -u b2b_user -p b2b_pass -e 
+USE b2b_db; 
+SHOW TABLES;
 ```
+Para alimentar la base con los seeds:
+```
+mysql -u b2b_user -p b2b_db < customers-api/seed.sql
+```
+La clave es b2b_pass
+```
+mysql -u b2b_user -p b2b_db < orders-api/seed.sql
+```
+La clave es b2b_pass
 
 # 🔐 Variables de entorno
 
