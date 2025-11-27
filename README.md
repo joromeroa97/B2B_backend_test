@@ -42,6 +42,8 @@ Opción de orquestación con un Lambda local (serverless-offline)
 
 11. Orchestrator Lambda (opcional)
 
+12. Conclusiones
+
 # 🏛️ Arquitectura
 
 La arquitectura incluye:
@@ -233,7 +235,7 @@ curl -X POST http://localhost:3002/orders/1/confirm \
 
 Repetir confirmación con el mismo idempotency key devuelve la misma respuesta sin duplicar operaciones.
 
-🔁 Idempotencia
+# 🔁 Idempotencia
 
 Implementada en:
 
@@ -249,7 +251,7 @@ Garantiza que si una confirmación falla a mitad, el cliente puede:
 
 - Retry safely sin efectos colaterales.
 
-☁️ Orchestrator Lambda (opcional)
+# ☁️ Orchestrator Lambda (opcional)
 
 El proyecto incluye un orquestador que:
 
@@ -275,7 +277,7 @@ Luego puede exponerse públicamente con ngrok:
 ngrok http 3003
 ```
 
-🎉 Conclusión
+# 🎉 Conclusión
 
 Con esta versión:
 
