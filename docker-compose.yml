@@ -1,0 +1,73 @@
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: b2b-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: b2b_db
+      MYSQL_USER: b2b_user
+      MYSQL_PASSWORD: b2b_pass
+    ports:
+      - "3307:3306"               # host:container
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    networks:
+      - b2b-net
+
+  customers-api:
+    build:
+      context: ./customers-api
+      dockerfile: Dockerfile
+    container_name: customers-api
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      PORT: 3001
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: b2b_user
+      DB_PASSWORD: b2b_pass
+      DB_NAME: b2b_db
+      JWT_SECRET: super-secret-key
+      SERVICE_TOKEN: internal-service-token
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: admin123
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./db:/db
+    networks:
+      - b2b-net
+
+  orders-api:
+    build:
+      context: ./orders-api
+      dockerfile: Dockerfile
+    container_name: orders-api
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - customers-api
+    environment:
+      PORT: 3002
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: b2b_user
+      DB_PASSWORD: b2b_pass
+      DB_NAME: b2b_db
+      JWT_SECRET: super-secret-key
+      SERVICE_TOKEN: internal-service-token
+      CUSTOMERS_API_BASE: http://customers-api:3001
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./db:/db
+    networks:
+      - b2b-net
+
+networks:
+  b2b-net:
+    driver: bridge
