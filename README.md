@@ -91,9 +91,9 @@ Opcional: Lambda Orchestrator (serverless offline) para procesar flujo completo
 # 🐳 Cómo levantar todo con Docker
 
 Desde la raíz del proyecto:
-
+```
 docker compose up -d --build
-
+```
 
 Esto levanta:
 
