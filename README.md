@@ -1,4 +1,4 @@
-🧾 B2B Order Orchestration – Technical Challenge (Versión Dockerizada)
+🧾 B2B Caso Tecnico
 By: Jandry Romero
 
 Este repositorio implementa una solución backend basada en microservicios, totalmente dockerizada, para la gestión de clientes, productos y órdenes, incluyendo:
