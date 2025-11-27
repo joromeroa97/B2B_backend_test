@@ -1,0 +1,158 @@
+openapi: 3.0.3
+info:
+  title: lambda-orchestrator
+  version: 1.0.0
+  description: |
+    Orquestador que valida cliente, crea la orden y la confirma de forma idempotente,
+    llamando a customers-api y orders-api y devolviendo un payload consolidado.
+
+servers:
+  - url: http://localhost:3003
+    description: lambda-orchestrator (serverless-offline)
+
+tags:
+  - name: Orchestrator
+    description: Orquestador de creación y confirmación de órdenes
+
+paths:
+  /orchestrator/create-and-confirm-order:
+    post:
+      tags: [Orchestrator]
+      summary: Crear y confirmar una orden orquestando múltiples servicios
+      description: |
+        Orquestador que valida cliente, crea la orden y la confirma de forma idempotente,
+        devolviendo un payload consolidado (cliente + orden + items).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrchestratorRequest'
+      responses:
+        '201':
+          description: Orden creada y confirmada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrchestratorResponse'
+        '400':
+          description: Error de negocio (cliente inexistente, stock, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado (JWT faltante o inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Error llamando a servicios internos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        product_id:
+          type: integer
+        sku:
+          type: string
+        name:
+          type: string
+        qty:
+          type: integer
+        unit_price_cents:
+          type: integer
+        subtotal_cents:
+          type: integer
+
+    OrchestratorRequest:
+      type: object
+      required: [customer_id, items, idempotency_key]
+      properties:
+        customer_id:
+          type: integer
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [product_id, qty]
+            properties:
+              product_id:
+                type: integer
+              qty:
+                type: integer
+                minimum: 1
+        idempotency_key:
+          type: string
+        correlation_id:
+          type: string
+
+    OrchestratorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+        data:
+          type: object
+          properties:
+            customer:
+              $ref: '#/components/schemas/Customer'
+            order:
+              type: object
+              properties:
+                id:
+                  type: integer
+                status:
+                  type: string
+                  enum: [CREATED, CONFIRMED, CANCELED]
+                total_cents:
+                  type: integer
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/OrderItem'
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
