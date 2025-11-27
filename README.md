@@ -1,4 +1,4 @@
-🧾 B2B Caso Tecnico
+# 🧾 B2B Caso Tecnico
 
 By: Jandry Romero
 
@@ -18,7 +18,7 @@ Idempotencia para confirmación de órdenes
 
 Opción de orquestación con un Lambda local (serverless-offline)
 
-📚 Índice
+# 📚 Índice
 
 1. Arquitectura
 
@@ -42,7 +42,7 @@ Opción de orquestación con un Lambda local (serverless-offline)
 
 11. Orchestrator Lambda (opcional)
 
-🏛️ Arquitectura
+# 🏛️ Arquitectura
 
 La arquitectura incluye:
 
@@ -60,7 +60,7 @@ ambos → MySQL (tabla compartida)
 
 Opcional: Lambda Orchestrator (serverless offline) para procesar flujo completo
 
-🧰 Tecnologías usadas
+# 🧰 Tecnologías usadas
 
 - Componente	Tecnología
 - Lenguaje	Node.js 20
@@ -71,9 +71,7 @@ Opcional: Lambda Orchestrator (serverless offline) para procesar flujo completo
 - Migraciones	Scripts JS
 - Orquestación	AWS Lambda (emulado con serverless-offline)
 
-📦 Estructura del proyecto
-
-## 📦 Estructura del proyecto
+# 📦 Estructura del proyecto
 
 - prueba-backend-b2b/
   - customers-api/
@@ -90,7 +88,7 @@ Opcional: Lambda Orchestrator (serverless offline) para procesar flujo completo
   - lambda-orchestrator/ (opcional)
 
 
-🐳 Cómo levantar todo con Docker
+# 🐳 Cómo levantar todo con Docker
 
 Desde la raíz del proyecto:
 
@@ -106,25 +104,30 @@ customers-api → puerto 3001
 orders-api → puerto 3002
 
 Verifica:
-
+```
 docker compose ps
+```
 
-🔧 Migraciones
+# 🔧 Migraciones
 
 Luego de levantar los contenedores, ejecuta:
-
+```
 docker compose exec customers-api npm run migrate
 
 docker compose exec orders-api npm run migrate
-
+```
 
 Para verificar tablas:
+```
+docker compose exec mysql 
+mysql -u b2b_user -pb2b_pass -e 
+"USE b2b_db; 
+SHOW TABLES;"
+```
 
-docker compose exec mysql mysql -u b2b_user -pb2b_pass -e "USE b2b_db; SHOW TABLES;"
+# 🔐 Variables de entorno
 
-🔐 Variables de entorno
-
-customers-api (.env)
+## customers-api (.env)
 - PORT=3001
 - DB_HOST=mysql
 - DB_PORT=3306
@@ -137,7 +140,7 @@ customers-api (.env)
 - ADMIN_USER=admin
 - ADMIN_PASSWORD=admin123
 
-orders-api (.env)
+## orders-api (.env)
 - PORT=3002
 - DB_HOST=mysql
 - DB_PORT=3306
@@ -149,11 +152,11 @@ orders-api (.env)
 - SERVICE_TOKEN=internal-service-token
 - CUSTOMERS_API_BASE=http://customers-api:3001
 
-🚀 APIs
+# 🚀 APIs
 
-customers-api
+## Customers-api
 
-Método	Ruta	Descripción
+### Método	Ruta	Descripción
 
 POST	/auth/login	Login (JWT)
 
@@ -169,9 +172,9 @@ DELETE	/customers/:id	Eliminar cliente
 
 GET	/internal/customers/:id	Endpoint interno protegido
 
-orders-api
+## Orders-api
 
-Método	Ruta	Descripción
+### Método	Ruta	Descripción
 
 POST	/products	Crear producto
 
@@ -184,20 +187,32 @@ POST	/orders/:id/confirm	Confirmar orden (idempotente)
 🧪 Probar el flujo completo
 
 1️⃣ Obtener JWT
-
+```
 curl -X POST http://localhost:3001/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "admin123"}'
-
-2️⃣ Crear producto
-
+```
+2️⃣ Crear customer
+```
+curl --request POST \
+  --url http://localhost:3001/customers \
+  --header 'Authorization: Bearer <TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+  "name": "ACME Corp",
+  "email": "acme@example.com",
+  "phone": "0999999999"
+}'
+```
+3️⃣ Crear producto
+```
 curl -X POST http://localhost:3002/products \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"sku":"SKU1","name":"Product","price_cents":1500,"stock":10}'
-
-3️⃣ Crear orden
-
+```
+4️⃣ Crear orden
+```
 curl -X POST http://localhost:3002/orders \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
@@ -207,14 +222,14 @@ curl -X POST http://localhost:3002/orders \
       { "product_id": 1, "qty": 2 }
     ]
   }'
-
-4️⃣ Confirmar orden (idempotente)
-
+```
+5️⃣ Confirmar orden (idempotente)
+```
 curl -X POST http://localhost:3002/orders/1/confirm \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Idempotency-Key: test-123" \
   -H "Content-Type: application/json"
-
+```
 
 Repetir confirmación con el mismo idempotency key devuelve la misma respuesta sin duplicar operaciones.
 
@@ -222,20 +237,17 @@ Repetir confirmación con el mismo idempotency key devuelve la misma respuesta s
 
 Implementada en:
 
-Tabla idempotency_keys
+- Tabla idempotency_keys.
 
-Control de concurrencia
+- Control de concurrencia.
 
-Prevención de doble actualización de stock
+- Prevención de doble actualización de stock.
 
-Respuesta cacheada usando la misma llave
+- Respuesta cacheada usando la misma llave.
 
 Garantiza que si una confirmación falla a mitad, el cliente puede:
 
-retry safely
-
-
-sin efectos colaterales.
+- Retry safely sin efectos colaterales.
 
 ☁️ Orchestrator Lambda (opcional)
 
@@ -251,25 +263,28 @@ Devuelve payload consolidado
 
 Se ejecuta con:
 
+```
 cd lambda-orchestrator
 npx serverless offline
+```
 
 
 Luego puede exponerse públicamente con ngrok:
 
+```
 ngrok http 3003
-
+```
 
 🎉 Conclusión
 
 Con esta versión:
 
-Todo el backend corre en Docker
+- Todo el backend corre en Docker.
 
-Las APIs se comunican entre sí por red interna
+- Las APIs se comunican entre sí por red interna.
 
-MySQL se inicializa automáticamente
+- MySQL se inicializa automáticamente.
 
-El sistema es portable, reproducible y listo para deploy
+- El sistema es portable, reproducible y listo para deploy.
 
-Orchestrator disponible para flujos avanzados
+- Orchestrator disponible para flujos avanzados.
