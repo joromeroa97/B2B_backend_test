@@ -98,6 +98,5 @@ ngrok.yml
 coverage/
 
 # Local DB dumps
-*.sql
 *.dump
 
