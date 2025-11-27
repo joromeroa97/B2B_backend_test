@@ -44,6 +44,8 @@ Opción de orquestación con un Lambda local (serverless-offline)
 
 12. Conclusiones
 
+13. Invocar lambda desde AWS.
+
 # 🏛️ Arquitectura
 
 La arquitectura incluye:
@@ -299,3 +301,20 @@ Con esta versión:
 - El sistema es portable, reproducible y listo para deploy.
 
 - Orchestrator disponible para flujos avanzados.
+
+# ☁️🟧 Invocar Lambda Orchestrator desde AWS
+
+La forma mas sencilla y recomendable para este caso de uso tecnico, seria realizarlo desde un API Gateway en AWS. Es decir, el API Gateway recibe el request y lo transforma en un evento JSON para luego proceder a consumir la ruta designada para crear y confirmar la orden.
+
+Un cURL de ejemplo del consumo seria algo asi:
+```
+curl -X POST \
+  https://xxxxx.execute-api.us-east-1.amazonaws.com/prod/orchestrator/create-and-confirm-order \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_JWT" \
+  -d '{
+    "customer_id":1,
+    "items":[{"product_id":1,"qty":2}],
+    "idempotency_key":"abc-123"
+  }'
+```
