@@ -1,6 +1,5 @@
---IMPORTANTE
--- Se asume que ya existen creados customers con IDs 1 y 2 en la tabla customers. Si no, primero asegurarse de haberlos
---creados con los comandos indicados en github README.
+-- Importante
+-- Se asume que ya existen creados customers con IDs 1 y 2 en la tabla customers
 
 SET FOREIGN_KEY_CHECKS = 0;
 
